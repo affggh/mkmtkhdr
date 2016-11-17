@@ -1,4 +1,3 @@
-# Andrew Huang <bluedrum@163.com>
 CC = gcc
 AR = ar rcv
 ifeq ($(windir),)
@@ -12,24 +11,20 @@ endif
 CFLAGS = -ffunction-sections -O3
 LDFLAGS = -Wl,--gc-sections
 
-all:libmincrypt.a mkbootimg$(EXE)
+all:mkmtkhdr$(EXE)
 
-static:libmincrypt.a mkbootimg-static$(EXE)
+static:mkmtkhdr-static$(EXE)
 
-libmincrypt.a:
-	make -C libmincrypt
+mkmtkhdr$(EXE):mkmtkhdr.o
+	$(CROSS_COMPILE)$(CC) -o $@ $^ -L. $(LDFLAGS) -s
 
-mkbootimg$(EXE):mkbootimg.o
-	$(CROSS_COMPILE)$(CC) -o $@ $^ -L. -lmincrypt $(LDFLAGS) -s
+mkmtkhdr-static$(EXE):mkmtkhdr.o
+	$(CROSS_COMPILE)$(CC) -o $@ $^ -L. $(LDFLAGS) -static -s
 
-mkbootimg-static$(EXE):mkbootimg.o
-	$(CROSS_COMPILE)$(CC) -o $@ $^ -L. -lmincrypt $(LDFLAGS) -static -s
-
-mkbootimg.o:mkbootimg.c
+mkmtkhdr.o:mkmtkhdr.c
 	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $< -I. -Werror
 
 clean:
-	$(RM) mkbootimg mkbootimg-static mkbootimg.o mkbootimg.exe mkbootimg-static.exe
-	$(RM) libmincrypt.a Makefile.~
-	make -C libmincrypt clean
+	$(RM) mkmtkhdr mkmtkhdr-static mkmtkhdr.o mkmtkhdr.exe mkmtkhdr-static.exe
+	$(RM) Makefile.~
 

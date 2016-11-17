@@ -1,4 +1,5 @@
 *.o
 *.a
 *.exe
-mkbootimg
+mkmtkhdr
+mkmtkhdr-static
