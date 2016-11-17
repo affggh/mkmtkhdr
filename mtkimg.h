@@ -6,8 +6,8 @@
 ** Copyright 2013 OmniROM
 */
 
-#ifndef _BOOT_IMAGE_H_
-#define _BOOT_IMAGE_H_
+#ifndef _MTK_IMAGE_H_
+#define _MTK_IMAGE_H_
 
 typedef union
 {
@@ -25,18 +25,20 @@ enum mtk_type
 {
     MTK_NONE=0,
     MTK_KERNEL,
-    MTK_ROOTFS
+    MTK_ROOTFS,
+    MTK_RECOVERY
 };
 
-const char *mtk_names[] = { "", "KERNEL", "ROOTFS" };
+const char *mtk_names[] = { "", "KERNEL", "ROOTFS", "RECOVERY" };
 
 
-typedef struct boot_img_hdr boot_img_hdr;
+typedef struct mtk_img_hdr mtk_img_hdr;
 
-struct boot_img_hdr
+struct mtk_img_hdr
 {
     unsigned kernel_size;  /* size in bytes */
-    unsigned ramdisk_size; /* size in bytes */
+    unsigned rootfs_size; /* size in bytes */
+    unsigned recovery_size;  /* size in bytes */
 };
 
 #endif

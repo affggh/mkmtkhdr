@@ -36,15 +36,18 @@ static void *load_file(const char *fn, unsigned *_sz, enum  mtk_type type)
     if(lseek(fd, 0, SEEK_SET) != 0) goto oops;
     if(type != MTK_NONE)
     {
-        printf("Type is %d\n", type);
         unsigned int magic;
         if(read(fd, &magic, 4) == 4 && magic != MTK_MAGIC)
         {
-           printf("No MTK Header, making one...\n");
+           printf("No MTK header, making one...\n");
+           printf("Type is %d (%s)\n", type, mtk_names[type]);
            needs_mtkheader=1;
            sz += sizeof(mtk_header);
            offset = sizeof(mtk_header);
            printf("old sz=%d, new sz=%d, offset=%d\n", datasz, sz, offset);
+        } else {
+            printf("MTK header already exists!");
+            goto oops;
         }
         if(lseek(fd, 0, SEEK_SET) != 0) goto oops;
     }
@@ -57,7 +60,7 @@ static void *load_file(const char *fn, unsigned *_sz, enum  mtk_type type)
 
     if(needs_mtkheader)
     {
-        printf("Generating mtk header\n");
+        printf("Generating MTK header...\n");
         mtk_header* hdr = (mtk_header*)data;
         memset(hdr->padding, 0xFF, sizeof(mtk_header));
         hdr->info.magic = MTK_MAGIC;
@@ -95,20 +98,22 @@ int write_file(const char *fn, void *data, int sz)
 int usage(void)
 {
     fprintf(stderr,"usage: mkmtkhdr\n"
-            "       --kernel <filename>\n"
-            "       --ramdisk <filename>\n"
+            "       [ --kernel <zImage filename> ]\n"
+            "       [ --rootfs|--recovery <ramdisk filename> ]\n"
             );
     return 1;
 }
 
 int main(int argc, char **argv)
 {
-    boot_img_hdr hdr;
+    mtk_img_hdr hdr;
 
     char *kernel_fn = NULL;
     void *kernel_data = NULL;
-    char *ramdisk_fn = NULL;
-    void *ramdisk_data = NULL;
+    char *rootfs_fn = NULL;
+    void *rootfs_data = NULL;
+    char *recovery_fn = NULL;
+    void *recovery_data = NULL;
 
     char out_fn[PATH_MAX];
     int fd;
@@ -116,9 +121,7 @@ int main(int argc, char **argv)
     argc--;
     argv++;
 
-    if(argc < 2) {
-        return usage();
-    }
+    if(argc < 2) return usage();
     while(argc > 0){
         char *arg = argv[0];
         char *val = argv[1];
@@ -126,8 +129,10 @@ int main(int argc, char **argv)
         argv += 2;
         if(!strcmp(arg, "--kernel")) {
             kernel_fn = val;
-        } else if(!strcmp(arg, "--ramdisk")) {
-            ramdisk_fn = val;
+        } else if(!strcmp(arg, "--rootfs")) {
+            rootfs_fn = val;
+        } else if(!strcmp(arg, "--recovery")) {
+            recovery_fn = val;
         } else {
             return usage();
         }
@@ -136,7 +141,7 @@ int main(int argc, char **argv)
     if (kernel_fn) {
         kernel_data = load_file(kernel_fn, &hdr.kernel_size, MTK_KERNEL);
         if(kernel_data == 0) {
-            fprintf(stderr,"error: could not load kernel '%s'\n", kernel_fn);
+            fprintf(stderr,"error: could not load kernel zImage '%s'\n", kernel_fn);
             return 1;
         } else {
             sprintf(out_fn, "%s-mtk", basename(kernel_fn));
@@ -144,14 +149,25 @@ int main(int argc, char **argv)
         }
     }
 
-    if (ramdisk_fn) {
-        ramdisk_data = load_file(ramdisk_fn, &hdr.ramdisk_size, MTK_ROOTFS);
-        if(ramdisk_data == 0) {
-            fprintf(stderr,"error: could not load ramdisk '%s'\n", ramdisk_fn);
+    if (rootfs_fn) {
+        rootfs_data = load_file(rootfs_fn, &hdr.rootfs_size, MTK_ROOTFS);
+        if(rootfs_data == 0) {
+            fprintf(stderr,"error: could not load rootfs ramdisk '%s'\n", rootfs_fn);
             return 1;
         } else {
-            sprintf(out_fn, "%s-mtk", basename(ramdisk_fn));
-            write_file(out_fn, ramdisk_data, hdr.ramdisk_size);
+            sprintf(out_fn, "%s-mtk", basename(rootfs_fn));
+            write_file(out_fn, rootfs_data, hdr.rootfs_size);
+        }
+    }
+
+    if (recovery_fn) {
+        recovery_data = load_file(recovery_fn, &hdr.recovery_size, MTK_RECOVERY);
+        if(recovery_data == 0) {
+            fprintf(stderr,"error: could not load recovery ramdisk '%s'\n", recovery_fn);
+            return 1;
+        } else {
+            sprintf(out_fn, "%s-mtk", basename(recovery_fn));
+            write_file(out_fn, recovery_data, hdr.recovery_size);
         }
     }
 
