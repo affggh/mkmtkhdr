@@ -9,22 +9,30 @@ RM = del
 endif
 
 CFLAGS = -ffunction-sections -O3
-LDFLAGS = -Wl,--gc-sections
+
+ifneq (,$(findstring darwin,$(CROSS_COMPILE)))
+    UNAME_S := Darwin
+else
+    UNAME_S := $(shell uname -s)
+endif
+ifeq ($(UNAME_S),Darwin)
+    LDFLAGS += -Wl,-dead_strip
+else
+    LDFLAGS += -Wl,--gc-sections -s
+endif
 
 all:mkmtkhdr$(EXE)
 
-static:mkmtkhdr-static$(EXE)
+static:
+	make LDFLAGS="$(LDGLAGS) -static"
 
 mkmtkhdr$(EXE):mkmtkhdr.o
-	$(CROSS_COMPILE)$(CC) -o $@ $^ -L. $(LDFLAGS) -s
-
-mkmtkhdr-static$(EXE):mkmtkhdr.o
-	$(CROSS_COMPILE)$(CC) -o $@ $^ -L. $(LDFLAGS) -static -s
+	$(CROSS_COMPILE)$(CC) -o $@ $^ -L. $(LDFLAGS)
 
 mkmtkhdr.o:mkmtkhdr.c
 	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $< -I. -Werror
 
 clean:
-	$(RM) mkmtkhdr mkmtkhdr-static mkmtkhdr.o mkmtkhdr.exe mkmtkhdr-static.exe
-	$(RM) Makefile.~
+	$(RM) mkmtkhdr
+	$(RM) *.~ *.exe *.o
 
