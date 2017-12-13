@@ -93,6 +93,8 @@ int write_file(const char *fn, void *data, int sz)
                 strerror(errno));
         return 1;
     }
+
+    return 0;
 }
 
 int usage(void)
@@ -145,7 +147,7 @@ int main(int argc, char **argv)
             return 1;
         } else {
             sprintf(out_fn, "%s-mtk", basename(kernel_fn));
-            write_file(out_fn, kernel_data, hdr.kernel_size);
+            if(write_file(out_fn, kernel_data, hdr.kernel_size) == 1) return 1;
         }
     }
 
@@ -156,7 +158,7 @@ int main(int argc, char **argv)
             return 1;
         } else {
             sprintf(out_fn, "%s-mtk", basename(rootfs_fn));
-            write_file(out_fn, rootfs_data, hdr.rootfs_size);
+            if(write_file(out_fn, rootfs_data, hdr.rootfs_size) == 1) return 1;
         }
     }
 
@@ -167,7 +169,7 @@ int main(int argc, char **argv)
             return 1;
         } else {
             sprintf(out_fn, "%s-mtk", basename(recovery_fn));
-            write_file(out_fn, recovery_data, hdr.recovery_size);
+            if(write_file(out_fn, recovery_data, hdr.recovery_size) == 1) return 1;
         }
     }
 
