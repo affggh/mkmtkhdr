@@ -26,7 +26,7 @@ endif
 all:mkmtkhdr$(EXE)
 
 static:
-	make LDFLAGS="$(LDFLAGS) -static"
+	$(MAKE) LDFLAGS="$(LDFLAGS) -static"
 
 mkmtkhdr$(EXE):mkmtkhdr.o
 	$(CROSS_COMPILE)$(CC) -o $@ $^ -L. $(LDFLAGS)

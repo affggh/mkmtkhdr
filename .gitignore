@@ -1,5 +1,3 @@
 *.o
-*.a
 *.exe
 mkmtkhdr
-mkmtkhdr-static
